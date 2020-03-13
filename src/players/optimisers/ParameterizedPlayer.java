@@ -1,7 +1,6 @@
 package players.optimisers;
 
 import players.Player;
-import players.optimisers.ParameterSet;
 
 public abstract class ParameterizedPlayer extends Player {
 

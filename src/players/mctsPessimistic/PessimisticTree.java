@@ -4,9 +4,6 @@ package players.mctsPessimistic;
 import core.GameState;
 import players.mcts.MCTSParams;
 import utils.ElapsedCpuTimer;
-import players.heuristics.AdvancedHeuristic;
-import players.heuristics.CustomHeuristic;
-import players.heuristics.StateHeuristic;
 
 
 public class PessimisticTree {

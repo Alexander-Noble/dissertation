@@ -3,7 +3,7 @@ package objects;
 import utils.Types;
 import utils.Vector2d;
 
-import java.awt.Image;
+import java.awt.*;
 import java.util.List;
 
 /**

@@ -6,10 +6,12 @@ import players.Player;
 import players.SimonSaysPlayer;
 import utils.*;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 
 import static utils.Types.*;
-import static utils.Types.VISUALS;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Game {

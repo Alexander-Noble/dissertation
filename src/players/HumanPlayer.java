@@ -3,9 +3,6 @@ package players;
 import core.GameState;
 import utils.Types;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.HashMap;
 import java.util.Random;
 
 public class HumanPlayer extends Player {

@@ -1,14 +1,15 @@
 package players.optimisers.ntbea;
 
+import players.optimisers.evodef.BanditLandscapeModel;
 import players.optimisers.evodef.SearchSpace;
 import players.optimisers.evodef.SearchSpaceUtil;
-import players.optimisers.evodef.BanditLandscapeModel;
-// import ntuple.params.Param;
 import utils.Picker;
 import utils.StatSummary;
 
 import java.util.ArrayList;
 import java.util.List;
+
+// import ntuple.params.Param;
 
 /**
  * Modified from original NTupleSystem created by simonmarklucas on 13/11/2016.

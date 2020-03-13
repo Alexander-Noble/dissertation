@@ -5,7 +5,6 @@ import players.heuristics.CustomHeuristic;
 import players.heuristics.StateHeuristic;
 import utils.Types;
 
-import java.util.Arrays;
 import java.util.Random;
 
 public class SimpleEvoAgent extends Player {

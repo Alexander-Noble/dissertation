@@ -1,9 +1,9 @@
 package players.rhea.hybrids;
 
 import core.GameState;
+import players.heuristics.StateHeuristic;
 import players.rhea.GameInterface;
 import players.rhea.utils.FMBudget;
-import players.heuristics.StateHeuristic;
 import utils.ElapsedCpuTimer;
 import utils.Types;
 import utils.Utils;

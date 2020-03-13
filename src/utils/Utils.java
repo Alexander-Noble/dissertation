@@ -4,7 +4,10 @@ import objects.Avatar;
 import objects.Bomb;
 import objects.GameObject;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Random;
 
 import static utils.Types.FLAME_LIFE;
 

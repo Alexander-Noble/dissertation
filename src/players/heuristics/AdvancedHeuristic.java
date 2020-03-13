@@ -9,9 +9,7 @@ import utils.Vector2d;
 import java.util.*;
 
 import static java.lang.Math.*;
-import static java.lang.Math.min;
 import static utils.Utils.*;
-import static utils.Utils.positionIsPassable;
 
 public class AdvancedHeuristic extends StateHeuristic {
 

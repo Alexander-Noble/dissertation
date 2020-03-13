@@ -4,7 +4,8 @@ import players.rhea.evo.Evolution;
 import players.rhea.utils.RHEAParams;
 import utils.ElapsedCpuTimer;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
 import static players.rhea.utils.Constants.*;
 

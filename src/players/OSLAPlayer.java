@@ -5,7 +5,6 @@ import players.heuristics.CustomHeuristic;
 import players.heuristics.StateHeuristic;
 import utils.Types;
 import utils.Utils;
-import utils.Vector2d;
 
 import java.util.ArrayList;
 import java.util.Random;

@@ -1,12 +1,12 @@
 import core.Game;
-import players.*;
-import utils.Types;
-import players.rhea.utils.Constants;
-import players.mcts.MCTSPlayer;
+import players.KeyController;
+import players.Player;
 import players.mcts.MCTSParams;
+import players.mcts.MCTSPlayer;
 import players.rhea.RHEAPlayer;
+import players.rhea.utils.Constants;
 import players.rhea.utils.RHEAParams;
-
+import utils.Types;
 
 import java.util.ArrayList;
 

@@ -1,8 +1,8 @@
 package players.mcts;
 
 import core.GameState;
-import players.optimisers.ParameterizedPlayer;
 import players.Player;
+import players.optimisers.ParameterizedPlayer;
 import utils.ElapsedCpuTimer;
 import utils.Types;
 

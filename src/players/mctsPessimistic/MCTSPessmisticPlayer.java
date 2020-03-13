@@ -7,7 +7,6 @@ import players.optimisers.ParameterizedPlayer;
 import utils.ElapsedCpuTimer;
 import utils.Types;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 public class MCTSPessmisticPlayer extends ParameterizedPlayer {
@@ -18,8 +17,8 @@ public class MCTSPessmisticPlayer extends ParameterizedPlayer {
 
     public  Types.ACTIONS[] actions;
 
-    public MCTSPessmisticPlayer(long seed, int id) { this(seed, id, new MCTSParams())}
-
+    public MCTSPessmisticPlayer(long seed, int id) { this(seed, id, new MCTSParams()); }
+    public
     @Override
     public Types.ACTIONS act(GameState gs) {
 

@@ -1,13 +1,14 @@
 package players.rhea;
 
 import core.GameState;
-import players.optimisers.ParameterizedPlayer;
 import players.Player;
+import players.optimisers.ParameterizedPlayer;
 import players.rhea.utils.RHEAParams;
 import utils.ElapsedCpuTimer;
 import utils.Types;
 
 import java.util.Random;
+
 import static players.rhea.utils.Constants.TIME_BUDGET;
 
 public class RHEAPlayer extends ParameterizedPlayer {

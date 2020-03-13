@@ -1,9 +1,9 @@
 package players.optimisers.evodef;
 
 import core.Game;
+import players.Player;
 import players.mcts.MCTSPlayer;
 import players.optimisers.ParameterizedPlayer;
-import players.Player;
 import utils.Types;
 
 import java.util.ArrayList;

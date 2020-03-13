@@ -1,9 +1,10 @@
-package players.mcts;
+package players.smoothUCT;
 
 import core.GameState;
 import players.heuristics.AdvancedHeuristic;
 import players.heuristics.CustomHeuristic;
 import players.heuristics.StateHeuristic;
+import players.mcts.MCTSParams;
 import utils.ElapsedCpuTimer;
 import utils.Types;
 import utils.Utils;
@@ -55,7 +56,7 @@ public class smoothNode
             m_depth = 0;
     }
 
-    void setRootGameState(GameState gs)
+    void setRoot(GameState gs)
     {
         this.rootState = gs;
         if (params.heuristic_method == params.CUSTOM_HEURISTIC)
@@ -65,7 +66,7 @@ public class smoothNode
     }
 
 
-    void mctsSearch(ElapsedCpuTimer elapsedTimer) {
+    void smoothSearch(ElapsedCpuTimer elapsedTimer) {
 
         double avgTimeTaken;
         double acumTimeTaken = 0;
@@ -250,9 +251,9 @@ public class smoothNode
         return false;
     }
 
-    private void backUp(SingleTreeNode node, double result)
+    private void backUp(smoothNode node, double result)
     {
-        SingleTreeNode n = node;
+        smoothNode n = node;
         while(n != null)
         {
             n.nVisits++;
@@ -334,12 +335,21 @@ public class smoothNode
 
 
     private boolean notFullyExpanded() {
-        for (SingleTreeNode tn : children) {
+        for (smoothNode tn : children) {
             if (tn == null) {
                 return true;
             }
         }
 
         return false;
+    }
+
+
+    private void select(GameState state) {
+
+    }
+
+    private void update() {
+
     }
 }

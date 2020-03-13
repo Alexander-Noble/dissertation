@@ -6,7 +6,8 @@ import utils.Utils;
 
 import java.util.Random;
 
-import static players.rhea.utils.Constants.*;
+import static players.rhea.utils.Constants.MUTATION_BIAS;
+import static players.rhea.utils.Constants.MUTATION_BIT;
 
 public class Mutation {
     private RHEAParams params;

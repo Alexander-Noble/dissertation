@@ -1,7 +1,6 @@
 package players.rhea.evo;
 
 import players.rhea.utils.RHEAParams;
-import utils.Utils;
 
 import java.util.Arrays;
 import java.util.Random;

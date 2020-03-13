@@ -3,7 +3,8 @@ package utils;
 import javax.swing.*;
 import java.awt.*;
 
-import static utils.Types.*;
+import static utils.Types.BOMB_LIFE;
+import static utils.Types.VERBOSE;
 
 public class GameView extends JComponent {
 
