@@ -5,20 +5,22 @@ import objects.Bomb;
 import objects.GameObject;
 import utils.Types;
 import utils.Vector2d;
-
 import java.util.*;
 
 import static java.lang.Math.*;
+import static java.lang.Math.abs;
 import static utils.Utils.*;
+import static utils.Utils.positionIsPassable;
 
-public class AdvancedHeuristic extends StateHeuristic {
+public class PessimisticHeuristics extends StateHeuristic {
 
-    private BoardStats rootBoardStats;
+
+    private PessimisticHeuristics.BoardStats rootBoardStats;
     private Random random;
 
-    public AdvancedHeuristic(GameState root, Random random) {
+    public PessimisticHeuristics(GameState root, Random random) {
         this.random = random;
-        rootBoardStats = new BoardStats(root, this.random);
+        rootBoardStats = new PessimisticHeuristics.BoardStats(root, this.random);
 
     }
 
@@ -28,7 +30,7 @@ public class AdvancedHeuristic extends StateHeuristic {
         Types.RESULT win = gs.winner();
 
         // Compute a score relative to the root's state.
-        BoardStats lastBoardState = new BoardStats(gs, this.random);
+        PessimisticHeuristics.BoardStats lastBoardState = new PessimisticHeuristics.BoardStats(gs, this.random);
         double rawScore = rootBoardStats.score(lastBoardState);
 
         // TODO: Should we reserve -1 and 1 to LOSS and WIN, and shrink rawScore to be in [-0.5, 0.5]?
@@ -55,15 +57,15 @@ public class AdvancedHeuristic extends StateHeuristic {
         static double maxBlastStrength = 10;
 
         // 0.4
-        double FACTOR_SAFE_DIRECTIONS = 0.2;
-        double FACTOR_BOMB_DIRECTIONS = 0.2;
+        double FACTOR_SAFE_DIRECTIONS = 0.5;
+        double FACTOR_BOMB_DIRECTIONS = 0.5;
 
         // 0.3
         double FACTOR_ENEMY;
         double FACTOR_TEAM;
 
         // 0.1
-        double FACTOR_ENEMY_DIST = 0.1;
+        double FACTOR_ENEMY_DIST = 0.15;
 
         // 0.2
         double FACTOR_CANKICK = 0.05;
@@ -173,7 +175,7 @@ public class AdvancedHeuristic extends StateHeuristic {
                 }
             }
 
-            Container from_dijkstra = dijkstra(board, myPosition, bombs, enemies, 10);
+            PessimisticHeuristics.BoardStats.Container from_dijkstra = dijkstra(board, myPosition, bombs, enemies, 10);
             this.items = from_dijkstra.items;
             this.dist = from_dijkstra.dist;
             this.prev = from_dijkstra.prev;
@@ -186,7 +188,7 @@ public class AdvancedHeuristic extends StateHeuristic {
          * @param futureState the stats of the board at the end of the rollout.
          * @return a score [0, 1]
          */
-        double score(BoardStats futureState)
+        double score(PessimisticHeuristics.BoardStats futureState)
         {
             int diffSafeDirections = futureState.getNumberOfSafeDirections() - this.getNumberOfSafeDirections();
             int diffDirectionsInRangeOfBomb = -(futureState.getNumberOfDirectionsInRangeOfBomb() - this.getNumberOfDirectionsInRangeOfBomb());
@@ -514,8 +516,8 @@ public class AdvancedHeuristic extends StateHeuristic {
          * @param depth - depth of search (default: 10)
          * @return TODO
          */
-        private Container dijkstra(Types.TILETYPE[][] board, Vector2d myPosition, ArrayList<Bomb> bombs,
-                                   ArrayList<GameObject> enemies, int depth){
+        private PessimisticHeuristics.BoardStats.Container dijkstra(Types.TILETYPE[][] board, Vector2d myPosition, ArrayList<Bomb> bombs,
+                                                                ArrayList<GameObject> enemies, int depth){
 
             HashMap<Types.TILETYPE, ArrayList<Vector2d> > items = new HashMap<>();
             HashMap<Vector2d, Integer> dist = new HashMap<>();
@@ -597,7 +599,7 @@ public class AdvancedHeuristic extends StateHeuristic {
                     }
                 }
             }
-            Container container = new Container();
+            PessimisticHeuristics.BoardStats.Container container = new PessimisticHeuristics.BoardStats.Container();
             container.dist = dist;
             container.items = items;
             container.prev = prev;

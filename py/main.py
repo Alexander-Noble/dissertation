@@ -8,17 +8,18 @@ data = pd.DataFrame(columns=["game_mode", "observability", "agents", "game_seed"
 # Event data death: (tick, relative_tick, agent_id, x, y, killer, stuck)
 # Event data pickup: (tick, relative_tick, agent_id, x, y, pickup)
 
-path = "gamelogs/"
+path = "C:/Users/anobl/Documents/Dissertation/dissertation/res/gamelogs/"
 for configuration in listdir(path):
     config_extract = configuration.split("-")
+    #config_extract[:] = [x for x in config_extract if x]
     # extract configurations
     game_mode = int(config_extract[0])  # GAME MODE
-    reps = int(config_extract[1])  # GAME REPETITIONS
+    reps = int(config_extract[3])  # GAME REPETITIONS
     observability = -1
-    idx = 4
-    if config_extract[2] != "":
-        observability = int(config_extract[2])  # GAME OBSERVABILITY
-        idx = 3
+    idx = 6
+    if config_extract[4] != "":
+        observability = int(config_extract[4])  # GAME OBSERVABILITY
+        idx = 5
     agents = [int(config_extract[idx]), int(config_extract[idx + 1]), int(config_extract[idx + 2]),
               int(config_extract[idx + 3])]  # GAME AGENTS
 

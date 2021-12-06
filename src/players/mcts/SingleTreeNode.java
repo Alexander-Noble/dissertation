@@ -62,6 +62,7 @@ public class SingleTreeNode
             this.rootStateHeuristic = new CustomHeuristic(gs);
         else if (params.heuristic_method == params.ADVANCED_HEURISTIC) // New method: combined heuristics
             this.rootStateHeuristic = new AdvancedHeuristic(gs, m_rnd);
+
     }
 
 

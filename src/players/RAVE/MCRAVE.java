@@ -1,10 +1,11 @@
-package players.smoothUCT;
+package players.RAVE;
 
 import core.GameState;
 import players.heuristics.AdvancedHeuristic;
 import players.heuristics.CustomHeuristic;
 import players.heuristics.StateHeuristic;
 import players.mcts.MCTSParams;
+import players.mcts.SingleTreeNode;
 import utils.ElapsedCpuTimer;
 import utils.Types;
 import utils.Utils;
@@ -13,12 +14,12 @@ import utils.Vector2d;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class smoothNode
+public class MCRAVE
 {
     public MCTSParams params;
 
-    private smoothNode parent;
-    private smoothNode[] children;
+    private MCRAVE parent;
+    private MCRAVE[] children;
     private double totValue;
     private int nVisits;
     private Random m_rnd;
@@ -29,17 +30,15 @@ public class smoothNode
 
     private int num_actions;
     private Types.ACTIONS[] actions;
-    private int total_actions;
-    private int[] times_action_selected = new int[num_actions]; //s, u, d, l, r, b
 
     private GameState rootState;
     private StateHeuristic rootStateHeuristic;
 
-    smoothNode(MCTSParams p, Random rnd, int num_actions, Types.ACTIONS[] actions) {
+    MCRAVE(MCTSParams p, Random rnd, int num_actions, Types.ACTIONS[] actions) {
         this(p, null, -1, rnd, num_actions, actions, 0, null);
     }
 
-    private smoothNode(MCTSParams p, smoothNode parent, int childIdx, Random rnd, int num_actions,
+    private MCRAVE(MCTSParams p, MCRAVE parent, int childIdx, Random rnd, int num_actions,
                            Types.ACTIONS[] actions, int fmCallsCount, StateHeuristic sh) {
         this.params = p;
         this.fmCallsCount = fmCallsCount;
@@ -47,7 +46,7 @@ public class smoothNode
         this.m_rnd = rnd;
         this.num_actions = num_actions;
         this.actions = actions;
-        children = new smoothNode[num_actions];
+        children = new MCRAVE[num_actions];
         totValue = 0.0;
         this.childIdx = childIdx;
         if(parent != null) {
@@ -58,7 +57,7 @@ public class smoothNode
             m_depth = 0;
     }
 
-    void setRoot(GameState gs)
+    void setRootGameState(GameState gs)
     {
         this.rootState = gs;
         if (params.heuristic_method == params.CUSTOM_HEURISTIC)
@@ -68,7 +67,7 @@ public class smoothNode
     }
 
 
-    void smoothSearch(ElapsedCpuTimer elapsedTimer) {
+    void mctsSearch(ElapsedCpuTimer elapsedTimer) {
 
         double avgTimeTaken;
         double acumTimeTaken = 0;
@@ -82,7 +81,7 @@ public class smoothNode
 
             GameState state = rootState.copy();
             ElapsedCpuTimer elapsedTimerIteration = new ElapsedCpuTimer();
-            smoothNode selected = treePolicy(state);
+            MCRAVE selected = treePolicy(state);
             double delta = selected.rollOut(state);
             backUp(selected, delta);
 
@@ -105,9 +104,9 @@ public class smoothNode
         //System.out.println(" ITERS " + numIters);
     }
 
-    private smoothNode treePolicy(GameState state) {
+    private MCRAVE treePolicy(GameState state) {
 
-        smoothNode cur = this;
+        MCRAVE cur = this;
 
         while (!state.isTerminal() && cur.m_depth < params.rollout_depth)
         {
@@ -115,7 +114,7 @@ public class smoothNode
                 return cur.expand(state);
 
             } else {
-                cur = cur.smoothUCT(state);
+                cur = cur.uct(state);
             }
         }
 
@@ -123,7 +122,7 @@ public class smoothNode
     }
 
 
-    private smoothNode expand(GameState state) {
+    private MCRAVE expand(GameState state) {
 
         int bestAction = 0;
         double bestValue = -1;
@@ -139,7 +138,7 @@ public class smoothNode
         //Roll the state
         roll(state, actions[bestAction]);
 
-        smoothNode tn = new smoothNode(params,this,bestAction,this.m_rnd,num_actions,
+        MCRAVE tn = new MCRAVE(params,this,bestAction,this.m_rnd,num_actions,
                 actions, fmCallsCount, rootStateHeuristic);
         children[bestAction] = tn;
         return tn;
@@ -167,52 +166,87 @@ public class smoothNode
 
     }
 
-    private smoothNode smoothUCT(GameState state) {
-        smoothNode selected = null;
+    private MCRAVE uct(GameState state) {
+        MCRAVE selected = null;
         double bestValue = -Double.MAX_VALUE;
-        double eta = 0.9;
-        double gamma = 0.1;
-        double d = 0.001;
-        double etaK = Math.max(gamma, eta * Math.pow(1 + d * Math.sqrt(this.nVisits), -1));
+        for (MCRAVE child : this.children)
+        {
+            double hvVal = child.totValue;
+            double childValue =  hvVal / (child.nVisits + params.epsilon);
 
-        if(Math.random() < etaK){
+            childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
 
-            for (smoothNode child : this.children) {
+            double uctValue = childValue +
+                    params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
 
-                double hvVal = child.totValue;
-                double childValue = hvVal / (child.nVisits + params.epsilon);
+            uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
 
-                childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
-
-                double uctValue = childValue +
-                        params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
-
-                uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
-
-                // small sampleRandom numbers: break ties in unexpanded nodes
-                if (uctValue > bestValue) {
-                    selected = child;
-                    bestValue = uctValue;
-                }
+            // small sampleRandom numbers: break ties in unexpanded nodes
+            if (uctValue > bestValue) {
+                selected = child;
+                bestValue = uctValue;
             }
-            if (selected == null) {
-                throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
-                        +bounds[0] + " " + bounds[1]);
-            }
-
-            //Roll the state:
-            roll(state, actions[selected.childIdx]);
-
-            return selected;
-
-        } else {
-
-            int mostVisited = mostVisitedAction();
-            int averageAction = mostVisited / this.nVisits;
-            smoothNode child = this.children[averageAction];
-            roll(state, actions[child.childIdx]);
-            return child;
         }
+        if (selected == null)
+        {
+            throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
+                    + bounds[0] + " " + bounds[1]);
+        }
+
+        //Roll the state:
+        roll(state, actions[selected.childIdx]);
+
+        return selected;
+    }
+
+    private MCRAVE rave(GameState state) {
+        MCRAVE selected = null;
+        double bestValue = -Double.MAX_VALUE;
+        for (MCRAVE child : this.children)
+        {
+            double hvVal = child.totValue;
+            double childValue =  hvVal / (child.nVisits + params.epsilon);
+
+            childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
+
+            double uctValue = childValue +
+                    params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
+            double amafValue = 0.0;
+            double beta = 0.0;
+            double rave = 0.0;
+            double beta_emprical = 0.1;
+            double uct_rave = 0.0;
+            double temp[] = new double[params.num_iterations];
+            double sum = 0.0;
+            for(int i = 0; i < params.num_iterations; i++){
+                if(child.nVisits != 0){
+                    temp[i] = child.totValue;
+                }else{
+                    temp[i] = 0;
+                }
+                sum += temp[i];
+            }
+            amafValue = (1/ child.nVisits) * sum;
+            beta = child.nVisits/(this.nVisits + 4 * child.nVisits * this.nVisits * (beta_emprical * beta_emprical));
+            rave = (1- beta) * uctValue + beta * amafValue;
+            uctValue = rave + params.K * Math.sqrt(Math.log(this.nVisits) / (this.nVisits));
+            uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
+            // small sampleRandom numbers: break ties in unexpanded nodes
+            if (uctValue > bestValue) {
+                selected = child;
+                bestValue = uctValue;
+            }
+        }
+        if (selected == null)
+        {
+            throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
+                    + bounds[0] + " " + bounds[1]);
+        }
+
+        //Roll the state:
+        roll(state, actions[selected.childIdx]);
+
+        return selected;
     }
 
     private double rollOut(GameState state)
@@ -268,9 +302,9 @@ public class smoothNode
         return false;
     }
 
-    private void backUp(smoothNode node, double result)
+    private void backUp(MCRAVE node, double result)
     {
-        smoothNode n = node;
+        MCRAVE n = node;
         while(n != null)
         {
             n.nVisits++;
@@ -352,7 +386,7 @@ public class smoothNode
 
 
     private boolean notFullyExpanded() {
-        for (smoothNode tn : children) {
+        for (MCRAVE tn : children) {
             if (tn == null) {
                 return true;
             }
@@ -360,7 +394,4 @@ public class smoothNode
 
         return false;
     }
-
-
-
 }

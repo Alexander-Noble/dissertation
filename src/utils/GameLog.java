@@ -20,8 +20,8 @@ public class GameLog implements Serializable {
     private long seed;
     private int size;
     private Types.GAME_MODE gameMode;
-    private final static String GAMELOGS_PATH = "res/gamelogs/ser";
-    private final static String JSON_GAMELOGS_PATH = "res/gamelogs/";
+    private final static String GAMELOGS_PATH = "C:\\Users\\anobl\\Documents\\Dissertation\\dissertation\\res\\gamelogs\\ser";
+    private final static String JSON_GAMELOGS_PATH = "C:\\Users\\anobl\\Documents\\Dissertation\\dissertation\\res\\gamelogs\\";
 
     public static int REP = 0;
 

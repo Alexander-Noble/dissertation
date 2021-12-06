@@ -1,11 +1,18 @@
 import core.Game;
+import players.EXP3.exp3Player;
 import players.KeyController;
+import players.OSLAPlayer;
 import players.Player;
+import players.RAVE.MCRavePlayer;
+import players.SimplePlayer;
 import players.mcts.MCTSParams;
 import players.mcts.MCTSPlayer;
+import players.mctsPessimistic.MCTSPessimisticPlayer;
+import players.mctsPessimistic.pessimisticParams;
 import players.rhea.RHEAPlayer;
 import players.rhea.utils.Constants;
 import players.rhea.utils.RHEAParams;
+import players.smoothUCT.smoothUCTPlayer;
 import utils.Types;
 
 import java.util.ArrayList;
@@ -37,15 +44,29 @@ public class Test {
         RHEAParams rheaParams = new RHEAParams();
         rheaParams.heurisic_type = Constants.CUSTOM_HEURISTIC;
 
-        players.add(new MCTSPlayer(seed, playerID++, mctsParams));
+        pessimisticParams pessparams = new pessimisticParams();
+        pessparams.heuristic_method = pessparams.PESSIMISTIC_HEURISTIC;
+
+       // players.add(new MCTSPlayer(seed, playerID++, mctsParams));
         //players.add(new MCTSPlayer(seed, playerID++, mctsParams));
 
 //        players.add(new SimplePlayer(seed, playerID++));
-        players.add(new RHEAPlayer(seed, playerID++, rheaParams));
+        //players.add(new RHEAPlayer(seed, playerID++, rheaParams));
 //        players.add(new SimplePlayer(seed, playerID++));
-        players.add(new MCTSPlayer(seed, playerID++, new MCTSParams()));
-        players.add(new RHEAPlayer(seed, playerID++, rheaParams));
+//        players.add(new MCTSPlayer(seed, playerID++, new MCTSParams()));
+//        players.add(new RHEAPlayer(seed, playerID++, rheaParams));
 
+
+
+//        players.add(new exp3Player(seed, playerID++, mctsParams));
+        players.add(new MCTSPessimisticPlayer(seed, playerID++, pessparams));
+//        players.add(new MCTSPessimisticPlayer(seed, playerID++, pessparams));
+        players.add(new smoothUCTPlayer(seed, playerID++, mctsParams));
+
+        players.add(new exp3Player(seed, playerID++, mctsParams));
+//        players.add(new SimplePlayer(seed, playerID++));
+//        players.add(new SimplePlayer(seed, playerID++));
+        players.add(new MCRavePlayer(seed, playerID++, mctsParams));
         // Make sure we have exactly NUM_PLAYERS players
         assert players.size() == Types.NUM_PLAYERS : "There should be " + Types.NUM_PLAYERS +
                 " added to the game, but there are " + players.size();
@@ -54,6 +75,7 @@ public class Test {
         //Assign players and run the game.
         game.setPlayers(players);
 
+        Types.DEFAULT_VISION_RANGE = 4;
         //Run a single game with the players
         Run.runGame(game, ki1, ki2, useSeparateThreads);
 

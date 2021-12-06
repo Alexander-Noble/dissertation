@@ -1,4 +1,5 @@
-package players.smoothUCT;
+package players.EXP3;
+
 
 import core.GameState;
 import players.heuristics.AdvancedHeuristic;
@@ -9,16 +10,17 @@ import utils.ElapsedCpuTimer;
 import utils.Types;
 import utils.Utils;
 import utils.Vector2d;
+import players.EXP3.exp3Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
-public class smoothNode
-{
+public class exp3Node {
     public MCTSParams params;
 
-    private smoothNode parent;
-    private smoothNode[] children;
+    private players.EXP3.exp3Node parent;
+    private players.EXP3.exp3Node[] children;
     private double totValue;
     private int nVisits;
     private Random m_rnd;
@@ -29,37 +31,36 @@ public class smoothNode
 
     private int num_actions;
     private Types.ACTIONS[] actions;
-    private int total_actions;
-    private int[] times_action_selected = new int[num_actions]; //s, u, d, l, r, b
 
     private GameState rootState;
     private StateHeuristic rootStateHeuristic;
+    private double[] expected_action_reward = exp3Player.getExpectedReward();
 
-    smoothNode(MCTSParams p, Random rnd, int num_actions, Types.ACTIONS[] actions) {
+
+    exp3Node(MCTSParams p, Random rnd, int num_actions, Types.ACTIONS[] actions) {
         this(p, null, -1, rnd, num_actions, actions, 0, null);
     }
 
-    private smoothNode(MCTSParams p, smoothNode parent, int childIdx, Random rnd, int num_actions,
-                           Types.ACTIONS[] actions, int fmCallsCount, StateHeuristic sh) {
+    private exp3Node(MCTSParams p, players.EXP3.exp3Node parent, int childIdx, Random rnd, int num_actions,
+                     Types.ACTIONS[] actions, int fmCallsCount, StateHeuristic sh) {
         this.params = p;
         this.fmCallsCount = fmCallsCount;
         this.parent = parent;
         this.m_rnd = rnd;
         this.num_actions = num_actions;
         this.actions = actions;
-        children = new smoothNode[num_actions];
+        children = new players.EXP3.exp3Node[num_actions];
         totValue = 0.0;
         this.childIdx = childIdx;
-        if(parent != null) {
+
+        if (parent != null) {
             m_depth = parent.m_depth + 1;
             this.rootStateHeuristic = sh;
-        }
-        else
+        } else
             m_depth = 0;
     }
 
-    void setRoot(GameState gs)
-    {
+    void setRootGameState(GameState gs) {
         this.rootState = gs;
         if (params.heuristic_method == params.CUSTOM_HEURISTIC)
             this.rootStateHeuristic = new CustomHeuristic(gs);
@@ -68,7 +69,7 @@ public class smoothNode
     }
 
 
-    void smoothSearch(ElapsedCpuTimer elapsedTimer) {
+    void mctsSearch(ElapsedCpuTimer elapsedTimer) {
 
         double avgTimeTaken;
         double acumTimeTaken = 0;
@@ -77,45 +78,42 @@ public class smoothNode
 
         int remainingLimit = 5;
         boolean stop = false;
+        double rewardEst;
 
-        while(!stop){
-
+        while (!stop) {
             GameState state = rootState.copy();
             ElapsedCpuTimer elapsedTimerIteration = new ElapsedCpuTimer();
-            smoothNode selected = treePolicy(state);
+            players.EXP3.exp3Node selected = treePolicy(state);
             double delta = selected.rollOut(state);
             backUp(selected, delta);
-
             //Stopping condition
-            if(params.stop_type == params.STOP_TIME) {
+            if (params.stop_type == params.STOP_TIME) {
                 numIters++;
-                acumTimeTaken += (elapsedTimerIteration.elapsedMillis()) ;
-                avgTimeTaken  = acumTimeTaken/numIters;
+                acumTimeTaken += (elapsedTimerIteration.elapsedMillis());
+                avgTimeTaken = acumTimeTaken / numIters;
                 remaining = elapsedTimer.remainingTimeMillis();
                 stop = remaining <= 2 * avgTimeTaken || remaining <= remainingLimit;
-            }else if(params.stop_type == params.STOP_ITERATIONS) {
+            } else if (params.stop_type == params.STOP_ITERATIONS) {
                 numIters++;
                 stop = numIters >= params.num_iterations;
-            }else if(params.stop_type == params.STOP_FMCALLS)
-            {
-                fmCallsCount+=params.rollout_depth;
+            } else if (params.stop_type == params.STOP_FMCALLS) {
+                fmCallsCount += params.rollout_depth;
                 stop = (fmCallsCount + params.rollout_depth) > params.num_fmcalls;
             }
         }
         //System.out.println(" ITERS " + numIters);
     }
 
-    private smoothNode treePolicy(GameState state) {
+    private players.EXP3.exp3Node treePolicy(GameState state) {
 
-        smoothNode cur = this;
+        players.EXP3.exp3Node cur = this;
 
-        while (!state.isTerminal() && cur.m_depth < params.rollout_depth)
-        {
+        while (!state.isTerminal() && cur.m_depth < params.rollout_depth) {
             if (cur.notFullyExpanded()) {
                 return cur.expand(state);
 
             } else {
-                cur = cur.smoothUCT(state);
+                cur = cur.exp3(state);
             }
         }
 
@@ -123,7 +121,7 @@ public class smoothNode
     }
 
 
-    private smoothNode expand(GameState state) {
+    private players.EXP3.exp3Node expand(GameState state) {
 
         int bestAction = 0;
         double bestValue = -1;
@@ -139,25 +137,22 @@ public class smoothNode
         //Roll the state
         roll(state, actions[bestAction]);
 
-        smoothNode tn = new smoothNode(params,this,bestAction,this.m_rnd,num_actions,
+        players.EXP3.exp3Node tn = new players.EXP3.exp3Node(params, this, bestAction, this.m_rnd, num_actions,
                 actions, fmCallsCount, rootStateHeuristic);
         children[bestAction] = tn;
         return tn;
     }
 
-    private void roll(GameState gs, Types.ACTIONS act)
-    {
+    private void roll(GameState gs, Types.ACTIONS act) {
         //Simple, all random first, then my position.
         int nPlayers = 4;
         Types.ACTIONS[] actionsAll = new Types.ACTIONS[4];
         int playerId = gs.getPlayerId() - Types.TILETYPE.AGENT0.getKey();
 
-        for(int i = 0; i < nPlayers; ++i)
-        {
-            if(playerId == i)
-            {
+        for (int i = 0; i < nPlayers; ++i) {
+            if (playerId == i) {
                 actionsAll[i] = act;
-            }else {
+            } else {
                 int actionIdx = m_rnd.nextInt(gs.nActions());
                 actionsAll[i] = Types.ACTIONS.all().get(actionIdx);
             }
@@ -167,59 +162,67 @@ public class smoothNode
 
     }
 
-    private smoothNode smoothUCT(GameState state) {
-        smoothNode selected = null;
-        double bestValue = -Double.MAX_VALUE;
-        double eta = 0.9;
-        double gamma = 0.1;
-        double d = 0.001;
-        double etaK = Math.max(gamma, eta * Math.pow(1 + d * Math.sqrt(this.nVisits), -1));
+    private exp3Node exp3(GameState state) {
+        double[] probDistr;
+        int choiceMade;
+        double gamma = Math.pow(this.nVisits, -0.3);
+        double depth_func = Math.pow(1.7, (this.m_depth - 9));
+        double rewardEst;
+        double reward;
 
-        if(Math.random() < etaK){
+        exp3Node selected = null;
+        Arrays.fill(expected_action_reward, 1);
+        exp3Player.setExpectedReward(expected_action_reward);
 
-            for (smoothNode child : this.children) {
+        probDistr = distribution(expected_action_reward, gamma);
+        choiceMade = choose(probDistr);
+        selected = this.children[choiceMade];
+        roll(state, actions[selected.childIdx]);
+        reward = rollOut(state);
+        rewardEst = reward / probDistr[choiceMade];
+        expected_action_reward[choiceMade] *= Math.exp((rewardEst * gamma / num_actions));
+        exp3Player.setExpectedReward(expected_action_reward);
 
-                double hvVal = child.totValue;
-                double childValue = hvVal / (child.nVisits + params.epsilon);
 
-                childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
+        return selected;
 
-                double uctValue = childValue +
-                        params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
-
-                uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
-
-                // small sampleRandom numbers: break ties in unexpanded nodes
-                if (uctValue > bestValue) {
-                    selected = child;
-                    bestValue = uctValue;
-                }
-            }
-            if (selected == null) {
-                throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
-                        +bounds[0] + " " + bounds[1]);
-            }
-
-            //Roll the state:
-            roll(state, actions[selected.childIdx]);
-
-            return selected;
-
-        } else {
-
-            int mostVisited = mostVisitedAction();
-            int averageAction = mostVisited / this.nVisits;
-            smoothNode child = this.children[averageAction];
-            roll(state, actions[child.childIdx]);
-            return child;
-        }
     }
 
-    private double rollOut(GameState state)
-    {
+    private players.EXP3.exp3Node uct(GameState state) {
+        players.EXP3.exp3Node selected = null;
+        double bestValue = -Double.MAX_VALUE;
+        for (players.EXP3.exp3Node child : this.children) {
+            double hvVal = child.totValue;
+            double childValue = hvVal / (child.nVisits + params.epsilon);
+
+            childValue = Utils.normalise(childValue, bounds[0], bounds[1]);
+
+            double uctValue = childValue +
+                    params.K * Math.sqrt(Math.log(this.nVisits + 1) / (child.nVisits + params.epsilon));
+
+            uctValue = Utils.noise(uctValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
+
+            // small sampleRandom numbers: break ties in unexpanded nodes
+            if (uctValue > bestValue) {
+                selected = child;
+                bestValue = uctValue;
+            }
+        }
+        if (selected == null) {
+            throw new RuntimeException("Warning! returning null: " + bestValue + " : " + this.children.length + " " +
+                    +bounds[0] + " " + bounds[1]);
+        }
+
+        //Roll the state:
+        roll(state, actions[selected.childIdx]);
+
+        return selected;
+    }
+
+    private double rollOut(GameState state) {
         int thisDepth = this.m_depth;
 
-        while (!finishRollout(state,thisDepth)) {
+        while (!finishRollout(state, thisDepth)) {
             int action = safeRandomAction(state);
             roll(state, actions[action]);
             thisDepth++;
@@ -228,14 +231,13 @@ public class smoothNode
         return rootStateHeuristic.evaluateState(state);
     }
 
-    private int safeRandomAction(GameState state)
-    {
+    private int safeRandomAction(GameState state) {
         Types.TILETYPE[][] board = state.getBoard();
         ArrayList<Types.ACTIONS> actionsToTry = Types.ACTIONS.all();
         int width = board.length;
         int height = board[0].length;
 
-        while(actionsToTry.size() > 0) {
+        while (actionsToTry.size() > 0) {
 
             int nAction = m_rnd.nextInt(actionsToTry.size());
             Types.ACTIONS act = actionsToTry.get(nAction);
@@ -246,7 +248,7 @@ public class smoothNode
             int y = pos.y + dir.y;
 
             if (x >= 0 && x < width && y >= 0 && y < height)
-                if(board[y][x] != Types.TILETYPE.FLAMES)
+                if (board[y][x] != Types.TILETYPE.FLAMES)
                     return nAction;
 
             actionsToTry.remove(nAction);
@@ -257,8 +259,7 @@ public class smoothNode
     }
 
     @SuppressWarnings("RedundantIfStatement")
-    private boolean finishRollout(GameState rollerState, int depth)
-    {
+    private boolean finishRollout(GameState rollerState, int depth) {
         if (depth >= params.rollout_depth)      //rollout end condition.
             return true;
 
@@ -268,11 +269,9 @@ public class smoothNode
         return false;
     }
 
-    private void backUp(smoothNode node, double result)
-    {
-        smoothNode n = node;
-        while(n != null)
-        {
+    private void backUp(players.EXP3.exp3Node node, double result) {
+        players.EXP3.exp3Node n = node;
+        while (n != null) {
             n.nVisits++;
             n.totValue += result;
             if (result < n.bounds[0]) {
@@ -292,14 +291,12 @@ public class smoothNode
         boolean allEqual = true;
         double first = -1;
 
-        for (int i=0; i<children.length; i++) {
+        for (int i = 0; i < children.length; i++) {
 
-            if(children[i] != null)
-            {
-                if(first == -1)
+            if (children[i] != null) {
+                if (first == -1)
                     first = children[i].nVisits;
-                else if(first != children[i].nVisits)
-                {
+                else if (first != children[i].nVisits) {
                     allEqual = false;
                 }
 
@@ -312,11 +309,9 @@ public class smoothNode
             }
         }
 
-        if (selected == -1)
-        {
+        if (selected == -1) {
             selected = 0;
-        }else if(allEqual)
-        {
+        } else if (allEqual) {
             //If all are equal, we opt to choose for the one with the best Q.
             selected = bestAction();
         }
@@ -324,14 +319,13 @@ public class smoothNode
         return selected;
     }
 
-    private int bestAction()
-    {
+    private int bestAction() {
         int selected = -1;
         double bestValue = -Double.MAX_VALUE;
 
-        for (int i=0; i<children.length; i++) {
+        for (int i = 0; i < children.length; i++) {
 
-            if(children[i] != null) {
+            if (children[i] != null) {
                 double childValue = children[i].totValue / (children[i].nVisits + params.epsilon);
                 childValue = Utils.noise(childValue, params.epsilon, this.m_rnd.nextDouble());     //break ties randomly
                 if (childValue > bestValue) {
@@ -341,8 +335,7 @@ public class smoothNode
             }
         }
 
-        if (selected == -1)
-        {
+        if (selected == -1) {
             System.out.println("Unexpected selection!");
             selected = 0;
         }
@@ -352,7 +345,7 @@ public class smoothNode
 
 
     private boolean notFullyExpanded() {
-        for (smoothNode tn : children) {
+        for (players.EXP3.exp3Node tn : children) {
             if (tn == null) {
                 return true;
             }
@@ -361,6 +354,40 @@ public class smoothNode
         return false;
     }
 
+    private int choose(double[] weights) {
+        double weightSum = 0;
+        for (double w : weights) {
+            weightSum += w;
+        }
+        double choice = randomDoubleUniformDistribution(0, weightSum);
+        int choiceIndex = 0;
 
+        for (double w : weights) {
+            choice -= w;
+            if (choice <= 0) {
+                return choiceIndex;
+            }
+            choiceIndex += 1;
+        }
+        return choiceIndex;
+    }
 
+    private double[] distribution(double[] weights, double gamma) {
+        double sum = 0;
+        double[] normalisedDoubles = new double[weights.length];
+
+        for (int i = 0; i < weights.length; i++) {
+            sum += weights[i];
+        }
+
+        for (int i = 0; i < weights.length; i++) {
+            normalisedDoubles[i] = ((1.0 - gamma) * (weights[i] / sum) + (gamma / weights.length));
+        }
+
+        return normalisedDoubles;
+    }
+
+    private double randomDoubleUniformDistribution(double min, double max) {
+        return min + (max - min) * Math.random();
+    }
 }

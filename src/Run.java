@@ -1,10 +1,16 @@
 import core.Game;
 import players.*;
+import players.EXP3.exp3Player;
 import players.mcts.MCTSParams;
 import players.mcts.MCTSPlayer;
+//import players.mctsPessimistic.MCTSPessimisticPlayer;
+//import players.mctsPessimistic.pessimisticParams;
+import players.mctsPessimistic.MCTSPessimisticPlayer;
+import players.mctsPessimistic.pessimisticParams;
 import players.rhea.RHEAPlayer;
 import players.rhea.utils.Constants;
 import players.rhea.utils.RHEAParams;
+import players.smoothUCT.smoothUCTPlayer;
 import utils.*;
 
 import java.util.ArrayList;
@@ -28,13 +34,14 @@ public class Run {
         System.out.println("\t\t 3 SimplePlayer");
         System.out.println("\t\t 4 RHEA 200 itereations, shift buffer, pop size 1, random init, length: 12");
         System.out.println("\t\t 5 MCTS 200 iterations, length: 12");
+
     }
 
     public static void main(String[] args) {
 
         //default
         if(args.length == 0)
-            args = new String[]{"0", "1", "1", "-1", "2", "3", "4", "5"};
+            args = new String[]{"0", "-1", "10", "-1", "8", "8", "5", "5"};
 
         if(args.length != 8) {
             printHelp();
@@ -121,6 +128,38 @@ public class Run {
                         mctsParams.heuristic_method = mctsParams.CUSTOM_HEURISTIC;
                         p = new MCTSPlayer(seed, playerID++, mctsParams);
                         playerStr[i-4] = "MCTS";
+                        break;
+                    case 6:
+                        MCTSParams smoothParams = new MCTSParams();
+                        smoothParams.stop_type = smoothParams.STOP_ITERATIONS;
+                        smoothParams.num_iterations = 200;
+                        smoothParams.rollout_depth = 12;
+
+                        smoothParams.heuristic_method = smoothParams.CUSTOM_HEURISTIC;
+                        p = new smoothUCTPlayer(seed, playerID++, smoothParams);
+                        playerStr[i-4] = "smooth UCT";
+                        break;
+                    case 7:
+                        MCTSParams exp3Params = new MCTSParams();
+                        exp3Params.stop_type = exp3Params.STOP_ITERATIONS;
+                        exp3Params.num_iterations = 200;
+                        exp3Params.rollout_depth = 12;
+
+                        exp3Params.heuristic_method = exp3Params.CUSTOM_HEURISTIC;
+                        p = new exp3Player(seed, playerID++, exp3Params);
+                        playerStr[i-4] = "exp3";
+                        break;
+                    case 8:
+                        pessimisticParams pessParams = new pessimisticParams();
+                        pessParams.stop_type = pessParams.STOP_ITERATIONS;
+                        pessParams.num_iterations = 200;
+                        pessParams.pessimistic_depth = 2;
+                        pessParams.pessimism = 10;
+                        pessParams.pessimistic_length = 2;
+
+                        pessParams.heuristic_method = pessParams.PESSIMISTIC_HEURISTIC;
+                        p = new MCTSPessimisticPlayer(seed, playerID++, pessParams);
+                        playerStr[i-4] = "Pessimistic Scenarios";
                         break;
                     default:
                         System.out.println("WARNING: Invalid agent ID: " + agentType );

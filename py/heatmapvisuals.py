@@ -47,7 +47,7 @@ def save_image(a, image_path):
     :param a: the numpy array to be saved
     :return:
     '''
-    image_path = f'heatmaps/{image_path}'
+    image_path = f'C:/Users/anobl/Documents/Dissertation/dissertation/out/gamelogs/events/heatmaps/{image_path}'
     mask = np.zeros_like(a)
     mask[np.triu_indices_from(mask)] = True
     with sns.axes_style("white"):

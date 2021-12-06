@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
-from py import heatmapvisuals as vis
+import heatmapvisuals as vis
+import pickle
 
 
-agent_mapping = {2: "OSLA", 3: "RuleBased", 4: "RHEA", 6: "MCTS"}
-agents = [4, 6]  # Put in here the id's of the agents you want to make heatmaps for
+agent_mapping = {2: "OSLA", 3: "RuleBased", 4: "RHEA", 6: "MCTS", 7: "smooth UCT", 8: "exp3", 9: "Pessimistic Scenarios"}
+agents = [7, 8, 9]  # Put in here the id's of the agents you want to make heatmaps for
 mode_mapping = {0: "FFA", 1: "TEAM"}
 game_seeds = [93988, 19067, 64416, 83884, 55636, 27599, 44350, 87872, 40815, 11772, 58367, 17546, 75375, 75772, 58237,
               30464, 27180, 23643, 67054, 19508]

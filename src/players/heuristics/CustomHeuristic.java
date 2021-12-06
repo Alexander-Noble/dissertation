@@ -28,6 +28,24 @@ public class CustomHeuristic extends StateHeuristic {
         return rawScore;
     }
 
+    public double evaluatePessimistic(GameState state) {
+        boolean gameOver = state.isTerminal();
+        Types.RESULT win = state.winner();
+
+        // Compute a score relative to the root's state.
+        BoardStats lastBoardState = new BoardStats(state);
+        double rawScore = rootBoardStats.score(lastBoardState);
+
+        if(gameOver && win == Types.RESULT.LOSS)
+            rawScore = -1;
+
+        if(gameOver && win == Types.RESULT.WIN)
+            rawScore = 1;
+
+        return rawScore;
+    }
+
+
     public static class BoardStats
     {
         int tick, nTeammates, nEnemies, blastStrength;
